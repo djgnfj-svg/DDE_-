@@ -25,8 +25,8 @@ class DBManager:
                 title TEXT NOT NULL,
                 content TEXT NOT NULL,
                 author TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP DEFAULT (datetime('now', 'localtime')),
+                updated_at TIMESTAMP DEFAULT (datetime('now', 'localtime'))
             )
         """)
         cursor.execute("""
@@ -34,7 +34,7 @@ class DBManager:
             AFTER UPDATE ON posts
             FOR EACH ROW
             BEGIN
-                UPDATE posts SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+                UPDATE posts SET updated_at = datetime('now', 'localtime') WHERE id = NEW.id;
             END
         """)
         self.connection.commit()
