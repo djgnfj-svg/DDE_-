@@ -44,3 +44,36 @@ repo.close()
 import os; os.remove('test_mvc.db')
 "
 ```
+
+### Controller 계층 테스트
+```bash
+venv/Scripts/python.exe -c "
+from PySide6.QtWidgets import QApplication
+import sys
+app = QApplication(sys.argv)
+
+from models import PostRepository
+from controllers import PostController
+
+repo = PostRepository('test_ctrl.db')
+controller = PostController(repo)
+
+# Signal 연결
+controller.post_created.connect(lambda: print('post_created'))
+controller.posts_loaded.connect(lambda posts: print(f'posts_loaded: {len(posts)}개'))
+controller.post_loaded.connect(lambda post: print(f'post_loaded: {post.title}'))
+controller.post_updated.connect(lambda: print('post_updated'))
+controller.post_deleted.connect(lambda: print('post_deleted'))
+controller.error_occurred.connect(lambda msg: print(f'error: {msg}'))
+
+# 테스트
+controller.create_post('테스트', '내용', '작성자')
+controller.load_posts()
+controller.load_post(1)
+controller.update_post(1, '수정됨', '수정내용')
+controller.delete_post(1)
+
+repo.close()
+import os; os.remove('test_ctrl.db')
+"
+```
