@@ -4,17 +4,19 @@ from PySide6.QtWidgets import (
     QHeaderView
 )
 from PySide6.QtCore import Signal
-from database import DBManager
+from controllers import PostController
+from models import Post
 
 
 class ListPage(QWidget):
-    request_create = Signal()      # 새 글 작성 버튼 클릭 시
+    request_create = Signal()
     request_view = Signal(int)     # 행 더블클릭 시 (post_id)
 
-    def __init__(self, db_manager: DBManager):
+    def __init__(self, controller: PostController):
         super().__init__()
-        self.db_manager = db_manager
+        self.controller = controller
         self.init_ui()
+        self.controller.posts_loaded.connect(self.on_posts_loaded)
         self.refresh_posts()
 
     def init_ui(self):
@@ -45,14 +47,16 @@ class ListPage(QWidget):
         self.setLayout(layout)
 
     def refresh_posts(self):
-        posts = self.db_manager.get_all_posts()
+        self.controller.load_posts()
+
+    def on_posts_loaded(self, posts: list[Post]):
         self.table.setRowCount(len(posts))
 
         for row_idx, post in enumerate(posts):
-            self.table.setItem(row_idx, 0, QTableWidgetItem(str(post['id'])))
-            self.table.setItem(row_idx, 1, QTableWidgetItem(post['title']))
-            self.table.setItem(row_idx, 2, QTableWidgetItem(post['author']))
-            created_at = post['created_at'].split('.')[0]  # 밀리초 제거
+            self.table.setItem(row_idx, 0, QTableWidgetItem(str(post.id)))
+            self.table.setItem(row_idx, 1, QTableWidgetItem(post.title))
+            self.table.setItem(row_idx, 2, QTableWidgetItem(post.author))
+            created_at = post.created_at.strftime("%Y-%m-%d %H:%M:%S") if post.created_at else ""
             self.table.setItem(row_idx, 3, QTableWidgetItem(created_at))
 
     def on_create_clicked(self):

@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QStackedWidget, QMessageBox
-from database import DBManager
+from models import PostRepository
+from controllers import PostController
 from ui.list_page import ListPage
 from ui.create_page import CreatePage
 from ui.view_page import ViewPage
@@ -14,9 +15,11 @@ class MainWindow(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.db_manager = DBManager()
+        self.repository = PostRepository()
+        self.controller = PostController(self.repository)
         self.init_ui()
         self.connect_signals()
+        self.connect_controller_signals()
 
     def init_ui(self):
         self.setWindowTitle("DDE 게시판 애플리케이션")
@@ -27,10 +30,10 @@ class MainWindow(QWidget):
 
         self.stacked_widget = QStackedWidget()
 
-        self.list_page = ListPage(self.db_manager)
-        self.create_page = CreatePage(self.db_manager)
-        self.view_page = ViewPage(self.db_manager)
-        self.edit_page = EditPage(self.db_manager)
+        self.list_page = ListPage(self.controller)
+        self.create_page = CreatePage(self.controller)
+        self.view_page = ViewPage(self.controller)
+        self.edit_page = EditPage(self.controller)
 
         self.stacked_widget.addWidget(self.list_page)     # 0
         self.stacked_widget.addWidget(self.create_page)   # 1
@@ -46,21 +49,28 @@ class MainWindow(QWidget):
         self.list_page.request_create.connect(self.switch_to_create)
         self.list_page.request_view.connect(self.switch_to_view)
 
-        self.create_page.post_created.connect(self.on_post_created)
         self.create_page.request_cancel.connect(self.switch_to_list)
 
         self.view_page.request_edit.connect(self.switch_to_edit)
-        self.view_page.post_deleted.connect(self.on_post_deleted)
         self.view_page.request_list.connect(self.switch_to_list)
 
-        self.edit_page.post_updated.connect(self.on_post_updated)
         self.edit_page.request_cancel.connect(self.on_edit_cancelled)
+
+    def connect_controller_signals(self):
+        self.controller.post_created.connect(self.on_post_created)
+        self.controller.post_updated.connect(self.on_post_updated)
+        self.controller.post_deleted.connect(self.on_post_deleted)
+        self.controller.error_occurred.connect(self.show_error)
+
+    def show_error(self, message: str):
+        QMessageBox.critical(self, "오류", message)
 
     def switch_to_list(self):
         self.list_page.refresh_posts()
         self.stacked_widget.setCurrentIndex(self.PAGE_LIST)
 
     def switch_to_create(self):
+        self.create_page.clear_inputs()
         self.stacked_widget.setCurrentIndex(self.PAGE_CREATE)
 
     def switch_to_view(self, post_id: int):
@@ -118,5 +128,5 @@ class MainWindow(QWidget):
                 event.ignore()
                 return
 
-        self.db_manager.close()
+        self.repository.close()
         event.accept()

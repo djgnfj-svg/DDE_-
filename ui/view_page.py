@@ -3,19 +3,20 @@ from PySide6.QtWidgets import (
     QLabel, QTextEdit, QPushButton, QMessageBox
 )
 from PySide6.QtCore import Signal
-from database import DBManager
+from controllers import PostController
+from models import Post
 
 
 class ViewPage(QWidget):
     request_edit = Signal(int)
-    post_deleted = Signal()
     request_list = Signal()
 
-    def __init__(self, db_manager: DBManager):
+    def __init__(self, controller: PostController):
         super().__init__()
-        self.db_manager = db_manager
+        self.controller = controller
         self.current_post_id = None
         self.init_ui()
+        self.controller.post_loaded.connect(self.on_post_loaded)
 
     def init_ui(self):
         layout = QVBoxLayout()
@@ -69,17 +70,17 @@ class ViewPage(QWidget):
 
     def load_post(self, post_id: int):
         self.current_post_id = post_id
-        post = self.db_manager.get_post_by_id(post_id)
+        self.controller.load_post(post_id)
 
-        if post:
-            self.label_title.setText(post['title'])
-            self.label_author.setText(post['author'])
-            self.label_created.setText(post['created_at'])
-            self.label_updated.setText(post['updated_at'])
-            self.text_content.setPlainText(post['content'])
-        else:
-            QMessageBox.warning(self, "오류", "게시글을 찾을 수 없습니다.")
-            self.request_list.emit()
+    def on_post_loaded(self, post: Post):
+        """Controller의 post_loaded Signal을 받아 UI 갱신"""
+        self.label_title.setText(post.title)
+        self.label_author.setText(post.author)
+        created_at = post.created_at.strftime("%Y-%m-%d %H:%M:%S") if post.created_at else ""
+        updated_at = post.updated_at.strftime("%Y-%m-%d %H:%M:%S") if post.updated_at else ""
+        self.label_created.setText(created_at)
+        self.label_updated.setText(updated_at)
+        self.text_content.setPlainText(post.content)
 
     def on_edit_clicked(self):
         if self.current_post_id:
@@ -98,14 +99,8 @@ class ViewPage(QWidget):
         )
 
         if reply == QMessageBox.StandardButton.Yes:
-            success = self.db_manager.delete_post(self.current_post_id)
-
-            if success:
-                QMessageBox.information(self, "삭제 완료", "게시글이 삭제되었습니다.")
-                self.current_post_id = None
-                self.post_deleted.emit()
-            else:
-                QMessageBox.warning(self, "삭제 실패", "게시글 삭제에 실패했습니다.")
+            self.controller.delete_post(self.current_post_id)
+            self.current_post_id = None
 
     def on_list_clicked(self):
         self.request_list.emit()

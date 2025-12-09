@@ -15,8 +15,17 @@ class PostController(QObject):
         super().__init__()
         self.repository = repository
 
+    def _validate_post_data(self, title: str, content: str) -> bool:
+        """데이터 유효성 검사"""
+        if not title or not title.strip():
+            self.error_occurred.emit("제목을 입력해주세요.")
+            return False
+        if not content or not content.strip():
+            self.error_occurred.emit("내용을 입력해주세요.")
+            return False
+        return True
+
     def load_posts(self):
-        """전체 게시글 목록 로드"""
         try:
             posts = self.repository.get_all()
             self.posts_loaded.emit(posts)
@@ -24,7 +33,6 @@ class PostController(QObject):
             self.error_occurred.emit(str(e))
 
     def load_post(self, post_id: int):
-        """단일 게시글 로드"""
         try:
             post = self.repository.get_by_id(post_id)
             if post:
@@ -35,18 +43,20 @@ class PostController(QObject):
             self.error_occurred.emit(str(e))
 
     def create_post(self, title: str, content: str, author: str):
-        """게시글 생성"""
+        if not self._validate_post_data(title, content):
+            return
+
         try:
             post = Post(title=title, content=content, author=author)
             self.repository.create(post)
             self.post_created.emit()
-        except ValueError as e:
-            self.error_occurred.emit(str(e))
         except Exception as e:
             self.error_occurred.emit(f"저장 오류: {str(e)}")
 
     def update_post(self, post_id: int, title: str, content: str):
-        """게시글 수정"""
+        if not self._validate_post_data(title, content):
+            return
+
         try:
             post = Post(id=post_id, title=title, content=content)
             success = self.repository.update(post)
@@ -54,13 +64,10 @@ class PostController(QObject):
                 self.post_updated.emit()
             else:
                 self.error_occurred.emit("수정 실패")
-        except ValueError as e:
-            self.error_occurred.emit(str(e))
         except Exception as e:
             self.error_occurred.emit(f"수정 오류: {str(e)}")
 
     def delete_post(self, post_id: int):
-        """게시글 삭제"""
         try:
             success = self.repository.delete(post_id)
             if success:

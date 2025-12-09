@@ -3,16 +3,15 @@ from PySide6.QtWidgets import (
     QLineEdit, QTextEdit, QPushButton, QMessageBox, QLabel
 )
 from PySide6.QtCore import Signal
-from database import DBManager
+from controllers import PostController
 
 
 class CreatePage(QWidget):
-    post_created = Signal()
     request_cancel = Signal()
 
-    def __init__(self, db_manager: DBManager):
+    def __init__(self, controller: PostController):
         super().__init__()
-        self.db_manager = db_manager
+        self.controller = controller
         self.init_ui()
 
     def init_ui(self):
@@ -56,29 +55,11 @@ class CreatePage(QWidget):
         self.setLayout(layout)
 
     def on_save_clicked(self):
-        title = self.title_input.text().strip()
-        content = self.content_input.toPlainText().strip()
-        author = self.author_input.text().strip()
+        title = self.title_input.text()
+        content = self.content_input.toPlainText()
+        author = self.author_input.text()
 
-        if not title:
-            QMessageBox.warning(self, "입력 오류", "제목을 입력해주세요.")
-            self.title_input.setFocus()
-            return
-
-        if not content:
-            QMessageBox.warning(self, "입력 오류", "내용을 입력해주세요.")
-            self.content_input.setFocus()
-            return
-
-        if not author:
-            author = "익명"
-
-        try:
-            self.db_manager.create_post(title, content, author)
-            self.clear_inputs()
-            self.post_created.emit()
-        except Exception as e:
-            QMessageBox.critical(self, "저장 오류", f"게시글 저장 중 오류 발생:\n{str(e)}")
+        self.controller.create_post(title, content, author)
 
     def on_cancel_clicked(self):
         if self.has_unsaved_content():

@@ -3,20 +3,21 @@ from PySide6.QtWidgets import (
     QLineEdit, QTextEdit, QPushButton, QMessageBox, QLabel
 )
 from PySide6.QtCore import Signal
-from database import DBManager
+from controllers import PostController
+from models import Post
 
 
 class EditPage(QWidget):
-    post_updated = Signal()
     request_cancel = Signal()
 
-    def __init__(self, db_manager: DBManager):
+    def __init__(self, controller: PostController):
         super().__init__()
-        self.db_manager = db_manager
+        self.controller = controller
         self.current_post_id = None
         self.original_title = ""
         self.original_content = ""
         self.init_ui()
+        self.controller.post_loaded.connect(self.on_post_loaded)
 
     def init_ui(self):
         layout = QVBoxLayout()
@@ -59,45 +60,22 @@ class EditPage(QWidget):
 
     def load_post(self, post_id: int):
         self.current_post_id = post_id
-        post = self.db_manager.get_post_by_id(post_id)
+        self.controller.load_post(post_id)
 
-        if post:
-            self.title_input.setText(post['title'])
-            self.content_input.setPlainText(post['content'])
-            self.label_author.setText(post['author'])
-            self.original_title = post['title']
-            self.original_content = post['content']
-        else:
-            QMessageBox.warning(self, "오류", "게시글을 찾을 수 없습니다.")
-            self.request_cancel.emit()
+    def on_post_loaded(self, post: Post):
+        self.title_input.setText(post.title)
+        self.content_input.setPlainText(post.content)
+        self.label_author.setText(post.author)
+        self.original_title = post.title
+        self.original_content = post.content
 
     def on_save_clicked(self):
         if not self.current_post_id:
             return
 
-        title = self.title_input.text().strip()
-        content = self.content_input.toPlainText().strip()
-
-        if not title:
-            QMessageBox.warning(self, "입력 오류", "제목을 입력해주세요.")
-            self.title_input.setFocus()
-            return
-
-        if not content:
-            QMessageBox.warning(self, "입력 오류", "내용을 입력해주세요.")
-            self.content_input.setFocus()
-            return
-
-        try:
-            success = self.db_manager.update_post(self.current_post_id, title, content)
-
-            if success:
-                QMessageBox.information(self, "저장 완료", "게시글이 수정되었습니다.")
-                self.post_updated.emit()
-            else:
-                QMessageBox.warning(self, "저장 실패", "게시글 수정에 실패했습니다.")
-        except Exception as e:
-            QMessageBox.critical(self, "저장 오류", f"게시글 수정 중 오류 발생:\n{str(e)}")
+        title = self.title_input.text()
+        content = self.content_input.toPlainText()
+        self.controller.update_post(self.current_post_id, title, content)
 
     def on_cancel_clicked(self):
         if self.has_unsaved_changes():
@@ -114,7 +92,7 @@ class EditPage(QWidget):
         self.request_cancel.emit()
 
     def has_unsaved_changes(self):
-        """수정된 내용이 있는지 확인"""
+        """현재 입력값과 원본 비교"""
         current_title = self.title_input.text()
         current_content = self.content_input.toPlainText()
         return current_title != self.original_title or current_content != self.original_content
