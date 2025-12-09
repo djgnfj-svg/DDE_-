@@ -1,10 +1,10 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QStackedWidget, QMessageBox
 from models import PostRepository
 from controllers import PostController
-from ui.list_page import ListPage
-from ui.create_page import CreatePage
-from ui.view_page import ViewPage
-from ui.edit_page import EditPage
+from views.list_page import ListPage
+from views.create_page import CreatePage
+from views.view_page import ViewPage
+from views.edit_page import EditPage
 
 
 class MainWindow(QWidget):
