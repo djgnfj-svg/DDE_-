@@ -10,7 +10,6 @@ from database import DBManager
 class ListPage(QWidget):
     request_create = Signal()      # 새 글 작성 버튼 클릭 시
     request_view = Signal(int)     # 행 더블클릭 시 (post_id)
-    request_home = Signal()        # 홈으로 버튼 클릭 시
 
     def __init__(self, db_manager: DBManager):
         super().__init__()
@@ -22,9 +21,6 @@ class ListPage(QWidget):
         layout = QVBoxLayout()
 
         top_layout = QHBoxLayout()
-        self.btn_home = QPushButton("← 홈으로")
-        self.btn_home.clicked.connect(self.on_home_clicked)
-        top_layout.addWidget(self.btn_home)
         top_layout.addStretch()
         self.btn_create = QPushButton("새 글 작성")
         self.btn_create.clicked.connect(self.on_create_clicked)
@@ -58,9 +54,6 @@ class ListPage(QWidget):
             self.table.setItem(row_idx, 2, QTableWidgetItem(post['author']))
             created_at = post['created_at'].split('.')[0]  # 밀리초 제거
             self.table.setItem(row_idx, 3, QTableWidgetItem(created_at))
-
-    def on_home_clicked(self):
-        self.request_home.emit()
 
     def on_create_clicked(self):
         self.request_create.emit()

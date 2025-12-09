@@ -81,8 +81,26 @@ class CreatePage(QWidget):
             QMessageBox.critical(self, "저장 오류", f"게시글 저장 중 오류 발생:\n{str(e)}")
 
     def on_cancel_clicked(self):
+        if self.has_unsaved_content():
+            reply = QMessageBox.question(
+                self,
+                "작성 취소",
+                "작성 중인 내용이 있습니다. 취소하시겠습니까?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
+            )
+            if reply == QMessageBox.StandardButton.No:
+                return
+
         self.clear_inputs()
         self.request_cancel.emit()
+
+    def has_unsaved_content(self):
+        """작성 중인 내용이 있는지 확인"""
+        title = self.title_input.text().strip()
+        content = self.content_input.toPlainText().strip()
+        author = self.author_input.text().strip()
+        return bool(title or content or author)
 
     def clear_inputs(self):
         self.title_input.clear()

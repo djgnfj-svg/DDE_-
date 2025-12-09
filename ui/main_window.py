@@ -1,5 +1,4 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QStackedWidget, QLabel, QPushButton
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QStackedWidget, QMessageBox
 from database import DBManager
 from ui.list_page import ListPage
 from ui.create_page import CreatePage
@@ -8,11 +7,10 @@ from ui.edit_page import EditPage
 
 
 class MainWindow(QWidget):
-    PAGE_HOME = 0
-    PAGE_LIST = 1
-    PAGE_CREATE = 2
-    PAGE_VIEW = 3
-    PAGE_EDIT = 4
+    PAGE_LIST = 0
+    PAGE_CREATE = 1
+    PAGE_VIEW = 2
+    PAGE_EDIT = 3
 
     def __init__(self):
         super().__init__()
@@ -29,46 +27,22 @@ class MainWindow(QWidget):
 
         self.stacked_widget = QStackedWidget()
 
-        self.home_page = self._create_home_page()
         self.list_page = ListPage(self.db_manager)
         self.create_page = CreatePage(self.db_manager)
         self.view_page = ViewPage(self.db_manager)
         self.edit_page = EditPage(self.db_manager)
 
-        self.stacked_widget.addWidget(self.home_page)     # 0
-        self.stacked_widget.addWidget(self.list_page)     # 1
-        self.stacked_widget.addWidget(self.create_page)   # 2
-        self.stacked_widget.addWidget(self.view_page)     # 3
-        self.stacked_widget.addWidget(self.edit_page)     # 4
+        self.stacked_widget.addWidget(self.list_page)     # 0
+        self.stacked_widget.addWidget(self.create_page)   # 1
+        self.stacked_widget.addWidget(self.view_page)     # 2
+        self.stacked_widget.addWidget(self.edit_page)     # 3
 
         layout.addWidget(self.stacked_widget)
         self.setLayout(layout)
 
-        self.stacked_widget.setCurrentIndex(self.PAGE_HOME)
-
-    def _create_home_page(self):
-        home_widget = QWidget()
-        home_layout = QVBoxLayout()
-
-        welcome_label = QLabel("DDE 게시판 애플리케이션")
-        welcome_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        welcome_label.setStyleSheet("font-size: 24px; font-weight: bold;")
-
-        btn_view_board = QPushButton("게시판 보기")
-        btn_view_board.setFixedSize(150, 40)
-        btn_view_board.clicked.connect(self.switch_to_list)
-
-        home_layout.addStretch()
-        home_layout.addWidget(welcome_label)
-        home_layout.addSpacing(20)
-        home_layout.addWidget(btn_view_board, alignment=Qt.AlignmentFlag.AlignCenter)
-        home_layout.addStretch()
-
-        home_widget.setLayout(home_layout)
-        return home_widget
+        self.stacked_widget.setCurrentIndex(self.PAGE_LIST)
 
     def connect_signals(self):
-        self.list_page.request_home.connect(self.switch_to_home)
         self.list_page.request_create.connect(self.switch_to_create)
         self.list_page.request_view.connect(self.switch_to_view)
 
@@ -81,9 +55,6 @@ class MainWindow(QWidget):
 
         self.edit_page.post_updated.connect(self.on_post_updated)
         self.edit_page.request_cancel.connect(self.on_edit_cancelled)
-
-    def switch_to_home(self):
-        self.stacked_widget.setCurrentIndex(self.PAGE_HOME)
 
     def switch_to_list(self):
         self.list_page.refresh_posts()
@@ -119,5 +90,33 @@ class MainWindow(QWidget):
             self.switch_to_list()
 
     def closeEvent(self, event):
+        current_page = self.stacked_widget.currentIndex()
+
+        # 작성 페이지에서 작성 중인 내용이 있는지 확인
+        if current_page == self.PAGE_CREATE and self.create_page.has_unsaved_content():
+            reply = QMessageBox.question(
+                self,
+                "프로그램 종료",
+                "작성 중인 내용이 있습니다. 종료하시겠습니까?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
+            )
+            if reply == QMessageBox.StandardButton.No:
+                event.ignore()
+                return
+
+        # 수정 페이지에서 수정 중인 내용이 있는지 확인
+        if current_page == self.PAGE_EDIT and self.edit_page.has_unsaved_changes():
+            reply = QMessageBox.question(
+                self,
+                "프로그램 종료",
+                "수정 중인 내용이 있습니다. 종료하시겠습니까?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
+            )
+            if reply == QMessageBox.StandardButton.No:
+                event.ignore()
+                return
+
         self.db_manager.close()
         event.accept()

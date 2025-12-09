@@ -14,6 +14,8 @@ class EditPage(QWidget):
         super().__init__()
         self.db_manager = db_manager
         self.current_post_id = None
+        self.original_title = ""
+        self.original_content = ""
         self.init_ui()
 
     def init_ui(self):
@@ -63,6 +65,8 @@ class EditPage(QWidget):
             self.title_input.setText(post['title'])
             self.content_input.setPlainText(post['content'])
             self.label_author.setText(post['author'])
+            self.original_title = post['title']
+            self.original_content = post['content']
         else:
             QMessageBox.warning(self, "오류", "게시글을 찾을 수 없습니다.")
             self.request_cancel.emit()
@@ -96,4 +100,21 @@ class EditPage(QWidget):
             QMessageBox.critical(self, "저장 오류", f"게시글 수정 중 오류 발생:\n{str(e)}")
 
     def on_cancel_clicked(self):
+        if self.has_unsaved_changes():
+            reply = QMessageBox.question(
+                self,
+                "수정 취소",
+                "수정 중인 내용이 있습니다. 취소하시겠습니까?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
+            )
+            if reply == QMessageBox.StandardButton.No:
+                return
+
         self.request_cancel.emit()
+
+    def has_unsaved_changes(self):
+        """수정된 내용이 있는지 확인"""
+        current_title = self.title_input.text()
+        current_content = self.content_input.toPlainText()
+        return current_title != self.original_title or current_content != self.original_content
