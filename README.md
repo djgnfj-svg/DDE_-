@@ -5,7 +5,7 @@ PySide6 기반의 데스크톱 게시판 프로그램
 
 | 구분 | 기술 |
 |------|------|
-| 언어 | Python 3.9+ |
+| 언어 | Python 3.10+ |
 | GUI | PySide6 |
 | 데이터베이스 | SQLite |
 | 테스트 | pytest |
