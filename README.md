@@ -55,49 +55,36 @@ venv/Scripts/python.exe -m pytest tests/ -v
 
 ## 프로젝트 구조
 
+MVC 구조로 작성했습니다. <br>
+- Models | 데이터 구조, DB 접근
+- View |  UI 표시, 사용자 입력
+- Controller | 유효성 검사, 비즈니스 로직
+
 ```
 DDE/
 ├── main.py
-├── board.db                 # SQLite DB
+├── board.db
 ├── requirements.txt
 │
-├── models/                  # Model 계층
-│   ├── post.py              # Post 데이터 클래스
-│   └── post_repository.py   # DB CRUD 처리
+├── models/
+│   ├── post.py              # Post data class
+│   └── post_repository.py   # DB CRUD (DBManager)
 │
-├── controllers/             # Controller 계층
-│   └── post_controller.py   # 비즈니스 로직, 유효성 검사
+├── controllers/
+│   └── post_controller.py
 │
-├── views/                   # View 계층
-│   ├── main_window.py       # 메인 윈도우, 페이지 전환
-│   ├── list_page.py         # 게시글 목록
-│   ├── create_page.py       # 게시글 작성
-│   ├── view_page.py         # 게시글 조회
-│   └── edit_page.py         # 게시글 수정
+├── views/
+│   ├── main_window.py 
+│   ├── list_page.py
+│   ├── create_page.py
+│   ├── view_page.py
+│   └── edit_page.py
 │
-└── tests/                   # 테스트 코드
-    ├── test_post_repository.py  # Repository 테스트
-    └── test_post_controller.py  # Controller 테스트
+└── tests/
+    ├── test_post_repository.py
+    └── test_post_controller.py
 ```
 
-## MVC 아키텍처
+ ## 추가 구현
 
-```
-View (views/)
-  │
-  │ Signal/메서드 호출
-  ▼
-Controller (controllers/)
-  │
-  │ 메서드 호출
-  ▼
-Model (models/)
-  │
-  ▼
-SQLite Database
-```
-
-- **View**: UI 표시, 사용자 입력 전달
-- **Controller**: 유효성 검사, 비즈니스 로직
-- **Model**: 데이터 구조, DB 접근
-
+  - 작성/수정 중 이탈 시 확인 대화상자
