@@ -80,7 +80,7 @@ class PostRepository:
         cursor.execute("""
             SELECT id, title, author, created_at, updated_at
             FROM posts
-            ORDER BY created_at DESC
+            ORDER BY created_at DESC, id DESC
         """)
         return [self._row_to_post(row) for row in cursor.fetchall()]
 
