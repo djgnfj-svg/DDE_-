@@ -42,6 +42,7 @@ class ListPage(QWidget):
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
 
+        self.table.verticalHeader().setVisible(False)
         self.table.doubleClicked.connect(self.on_row_double_clicked)
         layout.addWidget(self.table)
         self.setLayout(layout)
@@ -49,13 +50,21 @@ class ListPage(QWidget):
     def refresh_posts(self):
         self.controller.load_posts()
 
+    def truncate_text(self, text: str, max_length: int) -> str:
+        if len(text) > max_length:
+            return text[:max_length] + "..."
+        return text
+
     def on_posts_loaded(self, posts: list[Post]):
         self.table.setRowCount(len(posts))
 
         for row_idx, post in enumerate(posts):
+            title = self.truncate_text(post.title, 30)
+            author = self.truncate_text(post.author, 10)
+
             self.table.setItem(row_idx, 0, QTableWidgetItem(str(post.id)))
-            self.table.setItem(row_idx, 1, QTableWidgetItem(post.title))
-            self.table.setItem(row_idx, 2, QTableWidgetItem(post.author))
+            self.table.setItem(row_idx, 1, QTableWidgetItem(title))
+            self.table.setItem(row_idx, 2, QTableWidgetItem(author))
             created_at = post.created_at.strftime("%Y-%m-%d %H:%M:%S") if post.created_at else ""
             self.table.setItem(row_idx, 3, QTableWidgetItem(created_at))
 
