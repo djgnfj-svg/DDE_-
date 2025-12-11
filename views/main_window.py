@@ -22,7 +22,7 @@ class MainWindow(QWidget):
         self.connect_controller_signals()
 
     def init_ui(self):
-        self.setWindowTitle("DDE 게시판 애플리케이션")
+        self.setWindowTitle("DDE 게시판")
         self.resize(800, 600)
 
         layout = QVBoxLayout()
