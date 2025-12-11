@@ -32,15 +32,18 @@ class PostController(QObject):
         except Exception as e:
             self.error_occurred.emit(str(e))
 
-    def load_post(self, post_id: int):
+    def load_post(self, post_id: int) -> bool:
         try:
             post = self.repository.get_by_id(post_id)
             if post:
                 self.post_loaded.emit(post)
+                return True
             else:
                 self.error_occurred.emit("게시글을 찾을 수 없습니다.")
+                return False
         except Exception as e:
             self.error_occurred.emit(str(e))
+            return False
 
     def create_post(self, title: str, content: str, author: str):
         if not self._validate_post_data(title, content):

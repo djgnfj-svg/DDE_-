@@ -74,12 +74,16 @@ class MainWindow(QWidget):
         self.stacked_widget.setCurrentIndex(self.PAGE_CREATE)
 
     def switch_to_view(self, post_id: int):
-        self.view_page.load_post(post_id)
-        self.stacked_widget.setCurrentIndex(self.PAGE_VIEW)
+        if self.view_page.load_post(post_id):
+            self.stacked_widget.setCurrentIndex(self.PAGE_VIEW)
+        else:
+            self.switch_to_list()
 
     def switch_to_edit(self, post_id: int):
-        self.edit_page.load_post(post_id)
-        self.stacked_widget.setCurrentIndex(self.PAGE_EDIT)
+        if self.edit_page.load_post(post_id):
+            self.stacked_widget.setCurrentIndex(self.PAGE_EDIT)
+        else:
+            self.switch_to_list()
 
     def on_post_created(self):
         self.switch_to_list()

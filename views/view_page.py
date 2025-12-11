@@ -68,9 +68,9 @@ class ViewPage(QWidget):
         layout.addLayout(button_layout)
         self.setLayout(layout)
 
-    def load_post(self, post_id: int):
+    def load_post(self, post_id: int) -> bool:
         self.current_post_id = post_id
-        self.controller.load_post(post_id)
+        return self.controller.load_post(post_id)
 
     def on_post_loaded(self, post: Post):
         """Controller의 post_loaded Signal을 받아 UI 갱신"""
